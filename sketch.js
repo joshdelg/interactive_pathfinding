@@ -9,7 +9,7 @@ class Cell {
 
 // Sketch constants
 const canvasSize = 600;
-const gridSize = 10;
+const gridSize = 25;
 const gridScale = canvasSize / gridSize;
 const obstacles = (gridSize * gridSize) / 4;
 
