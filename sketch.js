@@ -9,9 +9,19 @@ class Cell {
 
 // Sketch constants
 const canvasSize = 600;
+const margin = 50;
+const gridSpace = canvasSize - 2 * margin;
 const gridSize = 25;
-const gridScale = canvasSize / gridSize;
+const gridScale = gridSpace / gridSize;
 const obstacles = (gridSize * gridSize) / 4;
+const cellStroke = gridScale / 8;
+
+let startButton;
+let startButtonSize = {
+	x: 75,
+	y: 25,
+};
+let hasStarted = false;
 
 let frontier = [];
 let cameFrom = {};
@@ -20,14 +30,23 @@ let goal;
 let goalFound = false;
 let pathFound = false;
 
+let colorScheme = {
+	'off-white': '#ecf4f3',
+	'off-grey': '#cee3e0',
+	'light-green': '#d1eecc',
+	'cyan': '#76dbd1',
+	'dark-cyan': '#57a99a'
+
+};
+
 // Cell types to colors mapping
 let cellColors = {
-	'empty': '#ffffff',
-	'obstacle': '#000000',
+	'empty': '#ecf4f3',
+	'obstacle': '#57a99a',
 	'start': '#ff1919',
 	'goal': '#6eff2b',
-	'visited': '#ababab',
-	'path': '#6bf0ff',
+	'visited': '#d1eecc',
+	'path': '#76dbd1',
 };
 
 // Initialize grid
@@ -93,8 +112,17 @@ function retrace() {
 	pathFound = true;
 }
 
+function startVisualization() {
+	hasStarted = true;
+}
+
 function setup() {
 	createCanvas(canvasSize, canvasSize);
+
+	startButton = createButton('Find Path');
+	startButton.size(startButtonSize.x, startButtonSize.y);
+	startButton.position((canvasSize - startButtonSize.x) / 2, (margin - startButtonSize.y) / 2);
+	startButton.mousePressed(startVisualization);
 
 	defineGrid();
 	setRandomObstacles(obstacles);
@@ -112,16 +140,23 @@ function setup() {
 
 function draw() {
 
-	if(goalFound == false) {
-		search(frontier.shift());
-	} else if(pathFound == false) {
-		retrace();
+	background(255);
+
+	if(hasStarted) {
+		if(goalFound == false) {
+			search(frontier.shift());
+		} else if(pathFound == false) {
+			retrace();
+		}
 	}
 
 	for(y = 0; y < gridSize; y++) {
 		for(x = 0; x < gridSize; x++) {
+			strokeWeight(cellStroke);
+			stroke(colorScheme['off-grey']);
 			fill(cellColors[grid[y][x].cellType]);
-			rect(x * gridScale, y * gridScale, gridScale, gridScale);
+			rect(x * gridScale + margin, y * gridScale + margin, gridScale, gridScale);
 		}
 	}
+
 }
