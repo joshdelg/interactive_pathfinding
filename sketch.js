@@ -3,7 +3,7 @@ const canvasSize = 600;
 const margin = 50;
 const gridSize = 25;
 const gridScale = canvasSize / gridSize;
-const obstacles = (gridSize * gridSize) / 4;
+//const obstacles = (gridSize * gridSize) / 4;
 const cellStroke = gridScale / 8;
 
 // Start button
@@ -15,6 +15,7 @@ let startButtonSize = {
 
 // Visualization state
 let state = {
+	gridSetup: true,
 	hasStarted: false,
 	goalFound: false,
 	pathFound: false,
@@ -52,11 +53,11 @@ function defineGrid() {
 	}
 }
 
-function setRandomObstacles(numObstacles) {
-	for(i = 0; i < numObstacles; i++) {
-		grid[~~random(gridSize - 1)][~~random(gridSize - 1)].makeObstacle();
-	}
-}
+//function setRandomObstacles(numObstacles) {
+//	for(i = 0; i < numObstacles; i++) {
+//		grid[~~random(gridSize - 1)][~~random(gridSize - 1)].makeObstacle();
+//	}
+//}
 
 function search(originCell) {
 	let x = originCell.x;
@@ -100,7 +101,30 @@ function retrace() {
 }
 
 function startVisualization() {
+	state.gridSetup = false;
 	state.hasStarted = true;
+}
+
+function makeCellObstacle(x, y) {
+	indexX = Math.floor(x / gridScale);
+	indexY = Math.floor(y / gridScale);
+	if (indexX >= 0 && indexX <= gridSize - 1 && indexY >= 0 && indexY <= gridSize - 1) {
+		cell = grid[indexY][indexX];
+		if(cell.cellType != 'start' && cell.cellType != 'goal')
+			grid[indexY][indexX].makeObstacle();
+	}
+}
+
+function mousePressed() {
+	if(state.gridSetup) {
+		makeCellObstacle(mouseX, mouseY);
+	}
+}
+
+function mouseDragged() {
+	if(state.gridSetup) {
+		makeCellObstacle(mouseX, mouseY);
+	}
 }
 
 function setup() {
@@ -112,7 +136,7 @@ function setup() {
 	startButton.mousePressed(startVisualization);
 
 	defineGrid();
-	setRandomObstacles(obstacles);
+	//setRandomObstacles(obstacles);
 
 	// Define start and goal
 	start = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
@@ -133,6 +157,8 @@ function draw() {
 		} else if(state.pathFound == false) {
 			retrace();
 		}
+	} else if(state.gridSetup) {
+
 	}
 
 	for(y = 0; y < gridSize; y++) {
