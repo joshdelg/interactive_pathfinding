@@ -24,6 +24,11 @@ class Cell {
 		this.color = colorScheme['dark-cyan'];
 	}
 
+	makeEmpty() {
+		this.cellType = 'empty';
+		this.color = colorScheme['off-white'];
+	}
+
 	visit(originCell) {
 		this.cellType = 'visited';
 		this.color = colorScheme['light-green'];

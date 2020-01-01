@@ -1,10 +1,10 @@
 // Sketch constants
 const canvasSize = 600;
 const margin = 50;
-const gridSize = 25;
-const gridScale = canvasSize / gridSize;
+let gridSize = 25;
+let gridScale = canvasSize / gridSize;
 //const obstacles = (gridSize * gridSize) / 4;
-const cellStroke = gridScale / 8;
+let cellStroke = gridScale / 8;
 
 // Start button
 let startButton;
@@ -13,9 +13,15 @@ let startButtonSize = {
 	y: 25,
 };
 
+let lockButton;
+
+let gridSlider;
+
 // Visualization state
 let state = {
-	gridSetup: true,
+	gridResize: true,
+	definingStartAndGoal: false,
+	obstacleDraw: false,
 	hasStarted: false,
 	goalFound: false,
 	pathFound: false,
@@ -26,6 +32,9 @@ let frontier = [];
 let cameFrom = {};
 let start;
 let goal;
+
+let lastCellInvert = 0;
+let invertDelay = 50;
 
 // https://colorhunt.co/palette/156039
 let colorScheme = {
@@ -44,6 +53,7 @@ let grid = [];
 
 function defineGrid() {
 	// Fill grid
+	grid = [];
 	for(row = 0; row < gridSize; row++) {
 		let gridRow = [];
 		for(col = 0; col < gridSize; col++) {
@@ -101,30 +111,54 @@ function retrace() {
 }
 
 function startVisualization() {
-	state.gridSetup = false;
+	state.obstacleDraw = false;
 	state.hasStarted = true;
 }
 
-function makeCellObstacle(x, y) {
+function invertCell(x, y, callTime) {
 	indexX = Math.floor(x / gridScale);
 	indexY = Math.floor(y / gridScale);
 	if (indexX >= 0 && indexX <= gridSize - 1 && indexY >= 0 && indexY <= gridSize - 1) {
-		cell = grid[indexY][indexX];
-		if(cell.cellType != 'start' && cell.cellType != 'goal')
-			grid[indexY][indexX].makeObstacle();
+		if(callTime - lastCellInvert >= invertDelay) {
+			cell = grid[indexY][indexX];
+			if(cell.cellType == 'empty')
+				cell.makeObstacle();
+			else if(cell.cellType == 'obstacle')
+				cell.makeEmpty();
+			lastCellInvert = callTime;
+		}
 	}
 }
 
 function mousePressed() {
-	if(state.gridSetup) {
-		makeCellObstacle(mouseX, mouseY);
+	if(state.obstacleDraw) {
+		invertCell(mouseX, mouseY, millis());
 	}
 }
 
 function mouseDragged() {
-	if(state.gridSetup) {
-		makeCellObstacle(mouseX, mouseY);
+	if(state.obstacleDraw) {
+		invertCell(mouseX, mouseY, millis());
 	}
+}
+
+function lockGridSize() {
+	if(state.gridResize) {
+		state.gridResize = false;
+		state.definingStartAndGoal = true;
+	}
+}
+
+function defineStartAndGoal() {
+	// Define start and goal
+	start = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
+	start.setAsStart();
+
+	goal = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
+	goal.setAsGoal();
+
+	state.definingStartAndGoal = false;
+	state.obstacleDraw = true;
 }
 
 function setup() {
@@ -135,15 +169,13 @@ function setup() {
 	startButton.position((windowWidth - startButtonSize.x) / 2, (((windowHeight - canvasSize) / 2) - startButtonSize.y) / 2);
 	startButton.mousePressed(startVisualization);
 
-	defineGrid();
+	lockButton = createButton('Lock Grid Size');
+	lockButton.mousePressed(lockGridSize);
+
+	gridSlider = createSlider(1, 50, 25);
+
+	//defineGrid();
 	//setRandomObstacles(obstacles);
-
-	// Define start and goal
-	start = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
-	start.setAsStart();
-
-	goal = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
-	goal.setAsGoal();
 
 }
 
@@ -151,14 +183,20 @@ function draw() {
 
 	background(255);
 
-	if(state.hasStarted) {
+	if(state.gridResize) {
+		gridSize = gridSlider.value();
+		gridScale = canvasSize / gridSize;
+		defineGrid();
+	} else if(state.definingStartAndGoal) {
+		defineStartAndGoal();
+	} else if(state.obstacleDraw) {
+
+	} else if(state.hasStarted) {
 		if(state.goalFound == false) {
 			search(frontier.shift());
 		} else if(state.pathFound == false) {
 			retrace();
 		}
-	} else if(state.gridSetup) {
-
 	}
 
 	for(y = 0; y < gridSize; y++) {
