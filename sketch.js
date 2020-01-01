@@ -10,9 +10,8 @@ class Cell {
 // Sketch constants
 const canvasSize = 600;
 const margin = 50;
-const gridSpace = canvasSize - 2 * margin;
 const gridSize = 25;
-const gridScale = gridSpace / gridSize;
+const gridScale = canvasSize / gridSize;
 const obstacles = (gridSize * gridSize) / 4;
 const cellStroke = gridScale / 8;
 
@@ -121,7 +120,7 @@ function setup() {
 
 	startButton = createButton('Find Path');
 	startButton.size(startButtonSize.x, startButtonSize.y);
-	startButton.position((canvasSize - startButtonSize.x) / 2, (margin - startButtonSize.y) / 2);
+	startButton.position((windowWidth - startButtonSize.x) / 2, (((windowHeight - canvasSize) / 2) - startButtonSize.y) / 2);
 	startButton.mousePressed(startVisualization);
 
 	defineGrid();
@@ -155,7 +154,7 @@ function draw() {
 			strokeWeight(cellStroke);
 			stroke(colorScheme['off-grey']);
 			fill(cellColors[grid[y][x].cellType]);
-			rect(x * gridScale + margin, y * gridScale + margin, gridScale, gridScale);
+			rect(x * gridScale, y * gridScale, gridScale, gridScale);
 		}
 	}
 
