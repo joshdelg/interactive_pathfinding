@@ -3,19 +3,19 @@ const canvasSize = 600;
 const margin = 50;
 let gridSize = 25;
 let gridScale = canvasSize / gridSize;
-//const obstacles = (gridSize * gridSize) / 4;
 let cellStroke = gridScale / 8;
 
 // Start button
 let startButton;
-let startButtonSize = {
-	x: 75,
-	y: 25,
-};
+//let startButtonSize = {
+//	x: 75,
+//	y: 25,
+//};
 
 let lockButton;
-
 let gridSlider;
+let obstacleCheck;
+let randomObstacles = true;
 
 // Visualization state
 let state = {
@@ -63,11 +63,15 @@ function defineGrid() {
 	}
 }
 
-//function setRandomObstacles(numObstacles) {
-//	for(i = 0; i < numObstacles; i++) {
-//		grid[~~random(gridSize - 1)][~~random(gridSize - 1)].makeObstacle();
-//	}
-//}
+function setRandomObstacles() {
+	let obstacles = (gridSize * gridSize) / 4;
+	for(i = 0; i < obstacles; i++) {
+		target = grid[~~random(gridSize - 1)][~~random(gridSize - 1)];
+		if(target.cellType != 'start' && target.cellType != 'goal')
+			target.makeObstacle();
+	}
+	state.obstacleDraw = false;
+}
 
 function search(originCell) {
 	let x = originCell.x;
@@ -131,13 +135,13 @@ function invertCell(x, y, callTime) {
 }
 
 function mousePressed() {
-	if(state.obstacleDraw) {
+	if(state.obstacleDraw && randomObstacles == false) {
 		invertCell(mouseX, mouseY, millis());
 	}
 }
 
 function mouseDragged() {
-	if(state.obstacleDraw) {
+	if(state.obstacleDraw && randomObstacles == false) {
 		invertCell(mouseX, mouseY, millis());
 	}
 }
@@ -161,22 +165,35 @@ function defineStartAndGoal() {
 	state.obstacleDraw = true;
 }
 
+function setObstacleMode() {
+	if(this.checked()) {
+		randomObstacles = true;
+	} else {
+		randomObstacles = false;
+	}
+}
+
 function setup() {
 	createCanvas(canvasSize, canvasSize);
 
 	startButton = createButton('Find Path');
-	startButton.size(startButtonSize.x, startButtonSize.y);
-	startButton.position((windowWidth - startButtonSize.x) / 2, (((windowHeight - canvasSize) / 2) - startButtonSize.y) / 2);
+	lockButton = createButton('Lock Grid Size');
+	gridSlider = createSlider(1, 50, 25);
+	obstacleCheck = createCheckbox('Random Obstacles', true);
+
+	startButton.position((windowWidth - startButton.size().width) / 2,
+		(((windowHeight - canvasSize) / 2) - startButton.size().height) / 2);
 	startButton.mousePressed(startVisualization);
 
-	lockButton = createButton('Lock Grid Size');
+	lockButton.position(windowWidth / 2 - canvasSize / 4 - lockButton.size().width / 2,
+		windowHeight - margin / 4 - lockButton.size().height / 2 - gridSlider.size().height / 2);
 	lockButton.mousePressed(lockGridSize);
 
-	gridSlider = createSlider(1, 50, 25);
+	gridSlider.position(lockButton.position().x - (gridSlider.size().width - lockButton.size().width) / 2, 
+		lockButton.position().y + 20);
 
-	//defineGrid();
-	//setRandomObstacles(obstacles);
-
+	obstacleCheck.position(windowWidth / 2 + canvasSize / 4 - obstacleCheck.size().width / 2, lockButton.position().y);
+	obstacleCheck.changed(setObstacleMode);
 }
 
 function draw() {
@@ -191,6 +208,9 @@ function draw() {
 		defineStartAndGoal();
 	} else if(state.obstacleDraw) {
 
+		if(randomObstacles) {
+			setRandomObstacles();
+		}
 	} else if(state.hasStarted) {
 		if(state.goalFound == false) {
 			search(frontier.shift());
